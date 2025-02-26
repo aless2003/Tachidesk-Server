@@ -53,6 +53,7 @@ interface Settings : Node {
 
     // extension
     val extensionRepos: List<String>?
+    val animeExtensionRepos: List<String>?
 
     // requests
     val maxSourcesInParallel: Int?
@@ -128,6 +129,7 @@ data class PartialSettingsType(
     override val autoDownloadIgnoreReUploads: Boolean?,
     // extension
     override val extensionRepos: List<String>?,
+    override val animeExtensionRepos: List<String>?,
     // requests
     override val maxSourcesInParallel: Int?,
     // updater
@@ -195,6 +197,7 @@ class SettingsType(
     override val autoDownloadIgnoreReUploads: Boolean?,
     // extension
     override val extensionRepos: List<String>,
+    override val animeExtensionRepos: List<String>,
     // requests
     override val maxSourcesInParallel: Int,
     // updater
@@ -257,6 +260,7 @@ class SettingsType(
         config.autoDownloadIgnoreReUploads.value,
         // extension
         config.extensionRepos.value,
+        config.animeExtensionRepos.value,
         // requests
         config.maxSourcesInParallel.value,
         // updater

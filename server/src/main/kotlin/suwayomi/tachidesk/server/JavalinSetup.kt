@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.future.future
 import kotlinx.coroutines.runBlocking
 import org.eclipse.jetty.server.ServerConnector
+import suwayomi.tachidesk.anime.AnimeAPI
 import suwayomi.tachidesk.global.GlobalAPI
 import suwayomi.tachidesk.graphql.GraphQL
 import suwayomi.tachidesk.manga.MangaAPI
@@ -101,6 +102,7 @@ object JavalinSetup {
                         path("v1/") {
                             GlobalAPI.defineEndpoints()
                             MangaAPI.defineEndpoints()
+                            AnimeAPI.defineEndpoints()
                         }
                         GraphQL.defineEndpoints()
                     }

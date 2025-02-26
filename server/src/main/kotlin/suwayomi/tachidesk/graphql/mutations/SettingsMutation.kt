@@ -72,6 +72,7 @@ class SettingsMutation {
 
         // extensions
         validateValue(settings.extensionRepos, "extensionRepos") { it.all { repoUrl -> repoUrl.matches(repoMatchRegex) } }
+        validateValue(settings.animeExtensionRepos, "animeExtensionRepos") { it.all { repoUrl -> repoUrl.matches(repoMatchRegex) } }
 
         // requests
         validateValue(settings.maxSourcesInParallel, "maxSourcesInParallel") { it in 1..20 }
@@ -138,6 +139,7 @@ class SettingsMutation {
 
         // extension
         updateSetting(settings.extensionRepos, serverConfig.extensionRepos)
+        updateSetting(settings.animeExtensionRepos, serverConfig.animeExtensionRepos)
 
         // requests
         updateSetting(settings.maxSourcesInParallel, serverConfig.maxSourcesInParallel)

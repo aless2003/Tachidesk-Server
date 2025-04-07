@@ -1,5 +1,7 @@
 package suwayomi.tachidesk.anime.model.dataclass
 
+import eu.kanade.tachiyomi.animesource.model.Track
+
 /*
  * Copyright (C) Contributors to the Suwayomi project
  *
@@ -11,4 +13,5 @@ data class VideoDataClass(
     val url: String,
     val videoTitle: String,
     var videoUrl: String?,
+    val subtitles: List<Track>,
 )

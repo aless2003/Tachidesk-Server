@@ -29,5 +29,5 @@ data class EpisodeDataClass(
     /** used to construct pages in the front-end */
     val videos: List<VideoDataClass>? = null,
     /** used to get subtitles */
-    val subtitles: List<Track>? = null,
+    val subtitles: List<List<Track>>? = null,
 )

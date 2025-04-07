@@ -177,9 +177,9 @@ object Episode {
                     it.videoPageUrl,
                     it.videoTitle,
                     it.videoUrl,
+                    it.subtitleTracks,
                 )
             },
-            episode.subtitles,
         )
     }
 

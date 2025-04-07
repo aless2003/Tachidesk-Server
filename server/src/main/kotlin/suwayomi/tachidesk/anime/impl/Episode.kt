@@ -131,9 +131,9 @@ object Episode {
                 it.episodeNumber,
                 it.scanlator,
                 animeId,
-                dbEpisode[EpisodeTable.isRead],
+                dbEpisode[EpisodeTable.isWatched],
                 dbEpisode[EpisodeTable.isBookmarked],
-                dbEpisode[EpisodeTable.lastPageRead],
+                dbEpisode[EpisodeTable.lastPosition],
                 episodeCount - index,
                 episodeList.size,
             )
@@ -153,12 +153,12 @@ object Episode {
         val source = getAnimeHttpSource(animeEntry[AnimeTable.sourceReference])
         val fetchedVideos =
             source
-                .fetchVideoList(
+                .getVideoList(
                     SEpisode.create().also {
                         it.url = episode.url
                         it.name = episode.name
                     },
-                ).awaitSingle()
+                )
 
         return EpisodeDataClass(
             episode.url,
@@ -167,18 +167,19 @@ object Episode {
             episode.episodeNumber,
             episode.scanlator,
             animeId,
-            episode.read,
+            episode.watched,
             episode.bookmarked,
-            episode.lastPageRead,
+            episode.lastPosition,
             episode.index,
             episode.episodeCount,
             fetchedVideos.map {
                 VideoDataClass(
-                    it.url,
-                    it.quality,
+                    it.videoPageUrl,
+                    it.videoTitle,
                     it.videoUrl,
                 )
             },
+            episode.subtitles,
         )
     }
 
@@ -242,29 +243,29 @@ object Episode {
     fun modifyEpisode(
         animeId: Int,
         episodeIndex: Int,
-        isRead: Boolean?,
+        isWatched: Boolean?,
         isBookmarked: Boolean?,
-        markPrevRead: Boolean?,
-        lastPageRead: Int?,
+        markPrevWatched: Boolean?,
+        lastPosition: Int?,
     ) {
         transaction {
-            if (listOf(isRead, isBookmarked, lastPageRead).any { it != null }) {
+            if (listOf(isWatched, isBookmarked, lastPosition).any { it != null }) {
                 EpisodeTable.update({ (EpisodeTable.anime eq animeId) and (EpisodeTable.episodeIndex eq episodeIndex) }) { update ->
-                    isRead?.also {
-                        update[EpisodeTable.isRead] = it
+                    isWatched?.also {
+                        update[EpisodeTable.isWatched] = it
                     }
                     isBookmarked?.also {
                         update[EpisodeTable.isBookmarked] = it
                     }
-                    lastPageRead?.also {
-                        update[EpisodeTable.lastPageRead] = it
+                    lastPosition?.also {
+                        update[EpisodeTable.lastPosition] = it
                     }
                 }
             }
 
-            markPrevRead?.let {
+            markPrevWatched?.let {
                 EpisodeTable.update({ (EpisodeTable.anime eq animeId) and (EpisodeTable.episodeIndex less episodeIndex) }) {
-                    it[EpisodeTable.isRead] = markPrevRead
+                    it[EpisodeTable.isWatched] = markPrevWatched
                 }
             }
         }

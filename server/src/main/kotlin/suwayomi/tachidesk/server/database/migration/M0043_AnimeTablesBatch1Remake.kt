@@ -13,7 +13,7 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.Table
 
 @Suppress("ClassName", "unused")
-class M0043_AnimeTablesBatch1Again : AddTableMigration() {
+class M0043_AnimeTablesBatch1Remake : AddTableMigration() {
     private class AnimeExtensionTable : IntIdTable() {
         val apkName = varchar("apk_name", 1024)
         val repo = varchar("repo", 1024).nullable()
@@ -46,6 +46,7 @@ class M0043_AnimeTablesBatch1Again : AddTableMigration() {
         val lang = varchar("lang", 10)
         val extension = reference("extension", AnimeExtensionTable())
         val partOfFactorySource = bool("part_of_factory_source").default(false)
+        val isNsfw = bool("is_nsfw")
     }
 
     override val tables: Array<Table>

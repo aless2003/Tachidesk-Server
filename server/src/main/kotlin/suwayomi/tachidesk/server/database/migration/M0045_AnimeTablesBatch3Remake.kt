@@ -14,7 +14,7 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.Table
 
 @Suppress("ClassName", "unused")
-class M0045_AnimeTablesBatch3Again : AddTableMigration() {
+class M0045_AnimeTablesBatch3Remake : AddTableMigration() {
     // dummy table
     private class AnimeTable : IntIdTable()
 
@@ -24,10 +24,11 @@ class M0045_AnimeTablesBatch3Again : AddTableMigration() {
         val date_upload = long("date_upload").default(0)
         val episode_number = float("episode_number").default(-1f)
         val scanlator = varchar("scanlator", 128).nullable()
+        val subtitles = varchar("subtitles", 2048).nullable()
 
-        val isRead = bool("read").default(false)
+        val isWatched = bool("watched").default(false)
         val isBookmarked = bool("bookmark").default(false)
-        val lastPageRead = integer("last_page_read").default(0)
+        val lastPosition = integer("last_position").default(0)
 
         // index is reserved by a function
         val animeIndex = integer("index")

@@ -9,8 +9,8 @@ package suwayomi.tachidesk.anime.controller
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.javalin.http.HttpStatus
+import suwayomi.tachidesk.anime.impl.extension.Extension
 import suwayomi.tachidesk.anime.impl.extension.ExtensionsList
-import suwayomi.tachidesk.manga.impl.extension.Extension
 import suwayomi.tachidesk.manga.model.dataclass.ExtensionDataClass
 import suwayomi.tachidesk.server.JavalinSetup.future
 import suwayomi.tachidesk.server.util.handler

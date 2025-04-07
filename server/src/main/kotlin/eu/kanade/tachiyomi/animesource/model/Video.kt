@@ -1,77 +1,213 @@
 package eu.kanade.tachiyomi.animesource.model
 
 import android.net.Uri
-import eu.kanade.tachiyomi.network.ProgressListener
-import rx.subjects.Subject
-// import tachiyomi.animesource.model.VideoUrl
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import okhttp3.Headers
+
+@Serializable
+data class Track(
+    val url: String,
+    val lang: String,
+)
+
+@Serializable
+enum class ChapterType {
+    Opening,
+    Ending,
+    Recap,
+    MixedOp,
+    Other,
+}
+
+@Serializable
+data class TimeStamp(
+    val start: Double,
+    val end: Double,
+    val name: String,
+    val type: ChapterType,
+)
 
 open class Video(
-    val url: String = "",
-    val quality: String = "",
-    var videoUrl: String? = null,
-    @Transient var uri: Uri? = null, // Deprecated but can't be deleted due to extensions
-) : ProgressListener {
-    @Transient
-    @Volatile
-    var status: Int = 0
-        set(value) {
-            field = value
-            statusSubject?.onNext(value)
-            statusCallback?.invoke(this)
-        }
+    var videoUrl: String = "",
+    val videoTitle: String = "",
+    val resolution: Int? = null,
+    val bitrate: Int? = null,
+    val headers: Headers? = null,
+    val preferred: Boolean = false,
+    val subtitleTracks: List<Track> = emptyList(),
+    val audioTracks: List<Track> = emptyList(),
+    val timestamps: List<TimeStamp> = emptyList(),
+    val internalData: String = "",
+    val initialized: Boolean = false,
+    // TODO(1.6): Remove after ext lib bump
+    val videoPageUrl: String = "",
+) {
+    // TODO(1.6): Remove after ext lib bump
+    @Deprecated("Use videoTitle instead", ReplaceWith("videoTitle"))
+    val quality: String
+        get() = videoTitle
+
+    // TODO(1.6): Remove after ext lib bump
+    @Deprecated("Use videoPageUrl instead", ReplaceWith("videoPageUrl"))
+    val url: String
+        get() = videoPageUrl
+
+    // TODO(1.6): Remove after ext lib bump
+    constructor(
+        url: String,
+        quality: String,
+        videoUrl: String?,
+        headers: Headers? = null,
+        subtitleTracks: List<Track> = emptyList(),
+        audioTracks: List<Track> = emptyList(),
+    ) : this(
+        videoPageUrl = url,
+        videoTitle = quality,
+        videoUrl = videoUrl ?: "null",
+        headers = headers,
+        subtitleTracks = subtitleTracks,
+        audioTracks = audioTracks,
+    )
+
+    // TODO(1.6): Remove after ext lib bump
+    constructor(
+        videoUrl: String = "",
+        videoTitle: String = "",
+        resolution: Int? = null,
+        bitrate: Int? = null,
+        headers: Headers? = null,
+        preferred: Boolean = false,
+        subtitleTracks: List<Track> = emptyList(),
+        audioTracks: List<Track> = emptyList(),
+        timestamps: List<TimeStamp> = emptyList(),
+        internalData: String = "",
+    ) : this(
+        videoUrl = videoUrl,
+        videoTitle = videoTitle,
+        resolution = resolution,
+        bitrate = bitrate,
+        headers = headers,
+        preferred = preferred,
+        subtitleTracks = subtitleTracks,
+        audioTracks = audioTracks,
+        timestamps = timestamps,
+        internalData = internalData,
+        videoPageUrl = "",
+    )
+
+    // TODO(1.6): Remove after ext lib bump
+    @Suppress("UNUSED_PARAMETER")
+    constructor(
+        url: String,
+        quality: String,
+        videoUrl: String?,
+        uri: Uri? = null,
+        headers: Headers? = null,
+    ) : this(url, quality, videoUrl, headers)
 
     @Transient
     @Volatile
-    var progress: Int = 0
+    var status: State = State.QUEUE
         set(value) {
             field = value
-            statusCallback?.invoke(this)
         }
 
-    @Transient
-    private var statusSubject: Subject<Int, Int>? = null
+    fun copy(
+        videoUrl: String = this.videoUrl,
+        videoTitle: String = this.videoTitle,
+        resolution: Int? = this.resolution,
+        bitrate: Int? = this.bitrate,
+        headers: Headers? = this.headers,
+        preferred: Boolean = this.preferred,
+        subtitleTracks: List<Track> = this.subtitleTracks,
+        audioTracks: List<Track> = this.audioTracks,
+        timestamps: List<TimeStamp> = this.timestamps,
+        internalData: String = this.internalData,
+        initialized: Boolean = this.initialized,
+        videoPageUrl: String = this.videoPageUrl,
+    ): Video =
+        Video(
+            videoUrl = videoUrl,
+            videoTitle = videoTitle,
+            resolution = resolution,
+            bitrate = bitrate,
+            headers = headers,
+            preferred = preferred,
+            subtitleTracks = subtitleTracks,
+            audioTracks = audioTracks,
+            timestamps = timestamps,
+            internalData = internalData,
+            initialized = initialized,
+            videoPageUrl = videoPageUrl,
+        )
 
-    @Transient
-    private var statusCallback: ((Video) -> Unit)? = null
-
-    override fun update(
-        bytesRead: Long,
-        contentLength: Long,
-        done: Boolean,
-    ) {
-        progress =
-            if (contentLength > 0) {
-                (100 * bytesRead / contentLength).toInt()
-            } else {
-                -1
-            }
-    }
-
-    fun setStatusSubject(subject: Subject<Int, Int>?) {
-        this.statusSubject = subject
-    }
-
-    fun setStatusCallback(f: ((Video) -> Unit)?) {
-        statusCallback = f
-    }
-
-    companion object {
-        const val QUEUE = 0
-        const val LOAD_VIDEO = 1
-        const val DOWNLOAD_IMAGE = 2
-        const val READY = 3
-        const val ERROR = 4
+    enum class State {
+        QUEUE,
+        LOAD_VIDEO,
+        READY,
+        ERROR,
     }
 }
 
-// fun Video.toVideoUrl(): VideoUrl {
-//    return VideoUrl(
-//        url = this.videoUrl ?: this.url
-//    )
-// }
-//
-// fun VideoUrl.toVideo(index: Int): Video {
-//    return Video(
-//        videoUrl = this.url
-//    )
-// }
+@Serializable
+data class SerializableVideo(
+    val videoUrl: String = "",
+    val videoTitle: String = "",
+    val resolution: Int? = null,
+    val bitrate: Int? = null,
+    val headers: List<Pair<String, String>>? = null,
+    val preferred: Boolean = false,
+    val subtitleTracks: List<Track> = emptyList(),
+    val audioTracks: List<Track> = emptyList(),
+    val timestamps: List<TimeStamp> = emptyList(),
+    val internalData: String = "",
+    val initialized: Boolean = false,
+    // TODO(1.6): Remove after ext lib bump
+    val videoPageUrl: String = "",
+) {
+    companion object {
+        fun List<Video>.serialize(): String =
+            Json.encodeToString(
+                this.map { vid ->
+                    SerializableVideo(
+                        vid.videoUrl,
+                        vid.videoTitle,
+                        vid.resolution,
+                        vid.bitrate,
+                        vid.headers?.toList(),
+                        vid.preferred,
+                        vid.subtitleTracks,
+                        vid.audioTracks,
+                        vid.timestamps,
+                        vid.internalData,
+                        vid.initialized,
+                        vid.videoPageUrl,
+                    )
+                },
+            )
+
+        fun String.toVideoList(): List<Video> =
+            Json
+                .decodeFromString<List<SerializableVideo>>(this)
+                .map { sVid ->
+                    Video(
+                        sVid.videoUrl,
+                        sVid.videoTitle,
+                        sVid.resolution,
+                        sVid.bitrate,
+                        sVid.headers
+                            ?.flatMap { it.toList() }
+                            ?.let { Headers.headersOf(*it.toTypedArray()) },
+                        sVid.preferred,
+                        sVid.subtitleTracks,
+                        sVid.audioTracks,
+                        sVid.timestamps,
+                        sVid.internalData,
+                        sVid.initialized,
+                        sVid.videoPageUrl,
+                    )
+                }
+    }
+}

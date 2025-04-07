@@ -14,6 +14,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 import rx.Observable
+import suwayomi.tachidesk.manga.impl.util.lang.awaitSingle
 import uy.kohesive.injekt.injectLazy
 import java.net.URI
 import java.net.URISyntaxException
@@ -240,6 +241,9 @@ abstract class AnimeHttpSource : AnimeCatalogueSource {
      */
     protected abstract fun episodeListParse(response: Response): List<SEpisode>
 
+    @Suppress("DEPRECATION")
+    override suspend fun getVideoList(episode: SEpisode): List<Video> = fetchVideoList(episode).awaitSingle()
+
     /**
      * Returns an observable with the page list for a chapter.
      *
@@ -286,7 +290,7 @@ abstract class AnimeHttpSource : AnimeCatalogueSource {
      *
      * @param page the chapter whose page list has to be fetched
      */
-    protected open fun videoUrlRequest(video: Video): Request = GET(video.url, headers)
+    protected open fun videoUrlRequest(video: Video): Request = GET(video.videoPageUrl, headers)
 
     /**
      * Parses the response from the site and returns the absolute url to the source image.

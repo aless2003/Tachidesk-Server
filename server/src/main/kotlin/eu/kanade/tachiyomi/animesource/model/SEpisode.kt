@@ -14,6 +14,14 @@ interface SEpisode : Serializable {
 
     var scanlator: String?
 
+    @Suppress("ktlint:standard:function-naming")
+    fun setEpisode_number(episode_number: Float) {
+        this.episodeNumber = episode_number
+    }
+
+    @Suppress("ktlint:standard:function-naming")
+    fun getEpisode_number(): Float = episodeNumber
+
     fun copyFrom(other: SEpisode) {
         name = other.name
         url = other.url

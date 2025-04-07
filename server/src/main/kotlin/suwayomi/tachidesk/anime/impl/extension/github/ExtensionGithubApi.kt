@@ -14,8 +14,7 @@ import eu.kanade.tachiyomi.network.parseAs
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import suwayomi.tachidesk.manga.impl.util.PackageTools.LIB_VERSION_MAX
-import suwayomi.tachidesk.manga.impl.util.PackageTools.LIB_VERSION_MIN
+import suwayomi.tachidesk.anime.impl.util.PackageTools
 import uy.kohesive.injekt.injectLazy
 
 object ExtensionGithubApi {
@@ -48,11 +47,13 @@ object ExtensionGithubApi {
         val response =
             client.newCall(GET(repo)).awaitSuccess()
 
-        return with(json) {
-            response
-                .parseAs<List<ExtensionJsonObject>>()
-                .toExtensions(repo.substringBeforeLast('/') + '/')
-        }
+        val x =
+            with(json) {
+                response
+                    .parseAs<List<ExtensionJsonObject>>()
+            }
+
+        return x.toExtensions(repo.substringBeforeLast('/') + '/')
     }
 
     fun getApkUrl(
@@ -76,8 +77,8 @@ object ExtensionGithubApi {
     private fun List<ExtensionJsonObject>.toExtensions(repo: String): List<OnlineExtension> =
         this
             .filter {
-                val libVersion = it.version.substringBeforeLast('.').toDouble()
-                libVersion in LIB_VERSION_MIN..LIB_VERSION_MAX
+                val libVersion = it.version.substringBeforeLast('.').toInt()
+                libVersion <= PackageTools.LIB_VERSION_MAX && libVersion >= PackageTools.LIB_VERSION_MIN
             }.map {
                 OnlineExtension(
                     repo = repo,

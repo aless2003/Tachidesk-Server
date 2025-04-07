@@ -15,4 +15,5 @@ object AnimeSourceTable : IdTable<Long>() {
     val lang = varchar("lang", 10)
     val extension = reference("extension", AnimeExtensionTable)
     val partOfFactorySource = bool("part_of_factory_source").default(false)
+    val isNsfw = bool("is_nsfw").default(false)
 }

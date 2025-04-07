@@ -22,6 +22,11 @@ interface SAnime : Serializable {
 
     var initialized: Boolean
 
+    @Suppress("ktlint:standard:function-naming")
+    fun setThumbnail_url(url: String) {
+        thumbnailUrl = url
+    }
+
     fun copyFrom(other: SAnime) {
         title = other.title
 

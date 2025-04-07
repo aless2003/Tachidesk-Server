@@ -8,19 +8,17 @@ package suwayomi.tachidesk.anime
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 import io.javalin.apibuilder.ApiBuilder
+import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.apibuilder.ApiBuilder.path
+import suwayomi.tachidesk.anime.controller.AnimeController
 import suwayomi.tachidesk.anime.controller.AnimeExtensionController
-import suwayomi.tachidesk.anime.impl.Anime.getAnime
-import suwayomi.tachidesk.anime.impl.Anime.getAnimeThumbnail
-import suwayomi.tachidesk.anime.impl.AnimeList.getAnimeList
+import suwayomi.tachidesk.anime.controller.AnimeSourceController
 import suwayomi.tachidesk.anime.impl.Episode.getEpisode
-import suwayomi.tachidesk.anime.impl.Episode.getEpisodeList
 import suwayomi.tachidesk.anime.impl.Episode.modifyEpisode
 import suwayomi.tachidesk.anime.impl.Search.sourceSearch
 import suwayomi.tachidesk.anime.impl.Source.getAnimeSource
 import suwayomi.tachidesk.anime.impl.Source.getSourceList
 import suwayomi.tachidesk.anime.impl.extension.Extension.getExtensionIcon
-import suwayomi.tachidesk.anime.impl.extension.Extension.installExtension
 import suwayomi.tachidesk.anime.impl.extension.Extension.uninstallExtension
 import suwayomi.tachidesk.anime.impl.extension.Extension.updateExtension
 import suwayomi.tachidesk.server.JavalinSetup.future
@@ -31,20 +29,12 @@ object AnimeAPI {
         path("anime") {
             // list all extensions
             path("extension") {
-                ApiBuilder.get("list", AnimeExtensionController.list)
+                get("list", AnimeExtensionController.list)
                 // install extension identified with "pkgName"
-                ApiBuilder.get("/api/v1/anime/extension/install/{pkgName}") { ctx ->
-                    val pkgName = ctx.pathParam("pkgName")
-
-                    ctx.future {
-                        future {
-                            installExtension(pkgName)
-                        }
-                    }
-                }
+                get("/install/{pkgName}", AnimeExtensionController.install)
 
                 // update extension identified with "pkgName"
-                ApiBuilder.get("/api/v1/anime/extension/update/{pkgName}") { ctx ->
+                get("/api/v1/anime/extension/update/{pkgName}") { ctx ->
                     val pkgName = ctx.pathParam("pkgName")
 
                     ctx.future {
@@ -55,7 +45,7 @@ object AnimeAPI {
                 }
 
                 // uninstall extension identified with "pkgName"
-                ApiBuilder.get("/api/v1/anime/extension/uninstall/{pkgName}") { ctx ->
+                get("/api/v1/anime/extension/uninstall/{pkgName}") { ctx ->
                     val pkgName = ctx.pathParam("pkgName")
 
                     ctx.future {
@@ -66,7 +56,7 @@ object AnimeAPI {
                 }
 
                 // icon for extension named `apkName`
-                ApiBuilder.get("/api/v1/anime/extension/icon/{apkName}") { ctx ->
+                get("/api/v1/anime/extension/icon/{apkName}") { ctx ->
                     // TODO: move to pkgName
                     val apkName = ctx.pathParam("apkName")
 
@@ -83,40 +73,24 @@ object AnimeAPI {
 
             path("source") {
                 // list sources
-                ApiBuilder.get("/api/v1/anime/source/list") { ctx ->
+                get("list") { ctx ->
                     ctx.json(getSourceList())
                 }
 
                 // fetch source with id `sourceId`
-                ApiBuilder.get("/api/v1/anime/source/{sourceId}") { ctx ->
+                get("{sourceId}") { ctx ->
                     val sourceId = ctx.pathParam("sourceId").toLong()
                     ctx.json(getAnimeSource(sourceId))
                 }
 
                 // popular animes from source with id `sourceId`
-                ApiBuilder.get("/api/v1/anime/source/{sourceId}/popular/{pageNum}") { ctx ->
-                    val sourceId = ctx.pathParam("sourceId").toLong()
-                    val pageNum = ctx.pathParam("pageNum").toInt()
-                    ctx.future {
-                        future {
-                            getAnimeList(sourceId, pageNum, popular = true)
-                        }
-                    }
-                }
+                get("{sourceId}/popular/{pageNum}", AnimeSourceController.popular)
 
                 // latest animes from source with id `sourceId`
-                ApiBuilder.get("/api/v1/anime/source/{sourceId}/latest/{pageNum}") { ctx ->
-                    val sourceId = ctx.pathParam("sourceId").toLong()
-                    val pageNum = ctx.pathParam("pageNum").toInt()
-                    ctx.future {
-                        future {
-                            getAnimeList(sourceId, pageNum, popular = false)
-                        }
-                    }
-                }
+                get("{sourceId}/latest/{pageNum}", AnimeSourceController.latest)
 
                 // single source search
-                ApiBuilder.get("/api/v1/anime/source/{sourceId}/search/{searchTerm}/{pageNum}") { ctx ->
+                get("/api/v1/anime/source/{sourceId}/search/{searchTerm}/{pageNum}") { ctx ->
                     val sourceId = ctx.pathParam("sourceId").toLong()
                     val searchTerm = ctx.pathParam("searchTerm")
                     val pageNum = ctx.pathParam("pageNum").toInt()
@@ -126,42 +100,18 @@ object AnimeAPI {
 
             path("anime") {
                 // get anime info
-                ApiBuilder.get("/api/v1/anime/anime/{animeId}/") { ctx ->
-                    val animeId = ctx.pathParam("animeId").toInt()
-                    val onlineFetch = ctx.queryParam("onlineFetch")?.toBoolean() ?: false
-
-                    ctx.future {
-                        future {
-                            getAnime(animeId, onlineFetch)
-                        }
-                    }
-                }
+                get("{animeId}", AnimeController.anime)
 
                 // anime thumbnail
-                ApiBuilder.get("/api/v1/anime/anime/{animeId}/thumbnail") { ctx ->
-                    val animeId = ctx.pathParam("animeId").toInt()
+                get("{animeId}/thumbnail", AnimeController.thumbnail)
 
-                    ctx.future {
-                        future { getAnimeThumbnail(animeId) }
-                            .thenApply {
-                                ctx.header("content-type", it.second)
-                                it.first
-                            }
-                    }
-                }
+                get("{animeId}/episodes", AnimeController.episodesList)
+
+                get("{animeId}/episode/{episodeIndex}", AnimeController.episode)
             }
 
             path("episode") {
-                // get episode list when showing a anime
-                ApiBuilder.get("/api/v1/anime/anime/{animeId}/episodes") { ctx ->
-                    val animeId = ctx.pathParam("animeId").toInt()
-
-                    val onlineFetch = ctx.queryParam("onlineFetch")?.toBoolean()
-
-                    ctx.future { future { getEpisodeList(animeId, onlineFetch) } }
-                }
-
-                ApiBuilder.get("/api/v1/anime/{animeId}/episode/{episodeIndex}") { ctx ->
+                get("anime/{animeId}/episode/{episodeIndex}") { ctx ->
                     val episodeIndex = ctx.pathParam("episodeIndex").toInt()
                     val animeId = ctx.pathParam("animeId").toInt()
                     ctx.future { future { getEpisode(episodeIndex, animeId) } }

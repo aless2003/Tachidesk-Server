@@ -4,6 +4,7 @@ import eu.kanade.tachiyomi.animesource.model.SAnime
 import eu.kanade.tachiyomi.animesource.model.SEpisode
 import eu.kanade.tachiyomi.animesource.model.Video
 import rx.Observable
+import suwayomi.tachidesk.manga.impl.util.lang.awaitSingle
 
 /**
  * A basic interface for creating a source. It could be an online source, a local source, etc...
@@ -45,6 +46,9 @@ interface AnimeSource {
      */
 //    @Deprecated("Use getEpisodeList instead")
     fun fetchVideoList(episode: SEpisode): Observable<List<Video>>
+
+    @Suppress("DEPRECATION")
+    suspend fun getVideoList(episode: SEpisode): List<Video> = fetchVideoList(episode).awaitSingle()
 
 //    /**
 //     * [1.x API] Get the updated details for a anime.

@@ -9,6 +9,6 @@ package suwayomi.tachidesk.anime.model.dataclass
 
 data class VideoDataClass(
     val url: String,
-    val quality: String,
+    val videoTitle: String,
     var videoUrl: String?,
 )

@@ -30,6 +30,8 @@ import java.net.URLClassLoader
 import java.nio.file.Files
 import java.nio.file.Path
 import javax.xml.parsers.DocumentBuilderFactory
+import kotlin.io.path.Path
+import kotlin.io.path.relativeTo
 
 object PackageTools {
     private val logger = KotlinLogging.logger {}
@@ -39,11 +41,12 @@ object PackageTools {
     const val METADATA_SOURCE_CLASS = "tachiyomi.animeextension.class"
     const val METADATA_SOURCE_FACTORY = "tachiyomi.animeextension.factory"
     const val METADATA_NSFW = "tachiyomi.animeextension.nsfw"
-    const val LIB_VERSION_MIN = 12
-    const val LIB_VERSION_MAX = 12
+    const val LIB_VERSION_MIN = 14
+    const val LIB_VERSION_MAX = 16
 
     private const val OFFICIAL_SIGNATURE = "50ab1d1e3a20d204d0ad6d334c7691c632e41b98dfa132bf385695fdfa63839c" // jmir1's key
     var trustedSignatures = mutableSetOf<String>() + OFFICIAL_SIGNATURE
+    val jarLoaderMap = mutableMapOf<String, URLClassLoader>()
 
     /**
      * Convert dex to jar, a wrapper for the dex2jar library
@@ -71,17 +74,18 @@ object PackageTools {
             .skipExceptions(false)
             .to(jarFilePath)
         if (handler.hasException()) {
-            val errorFile: Path = File(applicationDirs.extensionsRoot).toPath().resolve("$fileNameWithoutType-error.txt")
-            logger.error(
+            val rootPath = Path(applicationDirs.extensionsRoot)
+            val errorFile: Path = rootPath.resolve("$fileNameWithoutType-error.txt")
+            logger.error {
                 """
-                Detail Error Information in File $errorFile
+                Detail Error Information in File ${errorFile.relativeTo(rootPath)}
                 Please report this file to one of following link if possible (any one).
                 https://sourceforge.net/p/dex2jar/tickets/
                 https://bitbucket.org/pxb1988/dex2jar/issues
                 https://github.com/pxb1988/dex2jar/issues
                 dex2jar@googlegroups.com
-                """.trimIndent(),
-            )
+                """.trimIndent()
+            }
             handler.dump(errorFile, emptyArray<String>())
         } else {
             BytecodeEditor.fixAndroidClasses(jarFilePath)
@@ -100,7 +104,7 @@ object PackageTools {
                     dBuilder.parse(it)
                 }
 
-            logger.debug(parsed.manifestXml)
+            logger.trace { parsed.manifestXml }
 
             applicationInfo.metaData =
                 Bundle().apply {
@@ -145,15 +149,24 @@ object PackageTools {
     }
 
     /**
-     * loads the extension main class called $className from the jar located at $jarPath
+     * loads the extension main class called [className] from the jar located at [jarPath]
      * It may return an instance of HttpSource or SourceFactory depending on the extension.
      */
     fun loadExtensionSources(
         jarPath: String,
         className: String,
     ): Any {
-        val classLoader = URLClassLoader(arrayOf<URL>(URL("file:$jarPath")))
-        val classToLoad = Class.forName(className, false, classLoader)
-        return classToLoad.getDeclaredConstructor().newInstance()
+        try {
+            logger.debug { "loading jar with path: $jarPath" }
+            val classLoader = jarLoaderMap[jarPath] ?: URLClassLoader(arrayOf<URL>(Path(jarPath).toUri().toURL()))
+            val classToLoad = Class.forName(className, false, classLoader)
+
+            jarLoaderMap[jarPath] = classLoader
+
+            return classToLoad.getDeclaredConstructor().newInstance()
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to load jar with path: $jarPath" }
+            throw e
+        }
     }
 }

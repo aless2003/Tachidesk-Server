@@ -14,14 +14,14 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.Table
 
 @Suppress("ClassName", "unused")
-class M0044_AnimeTablesBatch2Again : AddTableMigration() {
+class M0044_AnimeTablesBatch2Remake : AddTableMigration() {
     private class AnimeTable : IntIdTable() {
         val url = varchar("url", 2048)
         val title = varchar("title", 512)
         val initialized = bool("initialized").default(false)
 
-        val artist = varchar("artist", 64).nullable()
-        val author = varchar("author", 64).nullable()
+        val artist = varchar("artist", 128).nullable()
+        val author = varchar("author", 128).nullable()
         val description = varchar("description", 4096).nullable()
         val genre = varchar("genre", 1024).nullable()
 

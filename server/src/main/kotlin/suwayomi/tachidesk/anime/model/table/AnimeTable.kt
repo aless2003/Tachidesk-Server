@@ -28,8 +28,8 @@ object AnimeTable : IntIdTable() {
     val title = varchar("title", 512)
     val initialized = bool("initialized").default(false)
 
-    val artist = varchar("artist", 64).nullable()
-    val author = varchar("author", 64).nullable()
+    val artist = varchar("artist", 128).nullable() // apparently 64 is not enough
+    val author = varchar("author", 128).nullable()
     val description = varchar("description", 4096).nullable()
     val genre = varchar("genre", 1024).nullable()
 

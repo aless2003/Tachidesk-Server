@@ -8,6 +8,7 @@ package suwayomi.tachidesk.anime.impl.extension
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import nl.adaptivity.xmlutil.core.impl.multiplatform.Language
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
@@ -114,6 +115,7 @@ object ExtensionsList {
                     } else {
                         // extension is not installed so we can overwrite the data without a care
                         AnimeExtensionTable.update({ AnimeExtensionTable.pkgName eq foundExtension.pkgName }) {
+                            it[repo] = foundExtension.repo
                             it[name] = foundExtension.name
                             it[versionName] = foundExtension.versionName
                             it[versionCode] = foundExtension.versionCode
@@ -126,6 +128,7 @@ object ExtensionsList {
                 } else {
                     // insert new record
                     AnimeExtensionTable.insert {
+                        it[repo] = foundExtension.repo
                         it[name] = foundExtension.name
                         it[pkgName] = foundExtension.pkgName
                         it[versionName] = foundExtension.versionName
@@ -169,6 +172,7 @@ object ExtensionsList {
             this
         }
 
+    @Language("RegExp")
     val repoMatchRegex =
         (
             "https:\\/\\/(?>www\\.|raw\\.)?(github|githubusercontent)\\.com" +

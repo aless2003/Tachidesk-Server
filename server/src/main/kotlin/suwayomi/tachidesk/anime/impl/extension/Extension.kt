@@ -133,7 +133,7 @@ object Extension {
 
             // Validate lib version
             val libVersion = packageInfo.versionName.substringBeforeLast('.').toInt()
-            if (libVersion <= PackageTools.LIB_VERSION_MAX && libVersion >= PackageTools.LIB_VERSION_MIN) {
+            if (libVersion > PackageTools.LIB_VERSION_MAX || libVersion < PackageTools.LIB_VERSION_MIN) {
                 throw Exception(
                     "Lib version is $libVersion, while only versions " +
                         "${PackageTools.LIB_VERSION_MIN} - ${PackageTools.LIB_VERSION_MAX} are allowed",
